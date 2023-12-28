@@ -10,8 +10,8 @@ library(PerformanceAnalytics)
 library(WGCNA)
 library(reshape2)
 setwd('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code')
-traits <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R/raw data/traits.csv', header = T, row.names=1) 
-sal_ph_alk <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R/raw data/sal_ph_alk.csv', header = T, row.names=1) 
+traits <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/traits.csv', header = T, row.names=1) 
+sal_ph_alk <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/sal_ph_alk.csv', header = T, row.names=1) 
 
 #figs-----
 sal=sal_ph_alk[,1:5]
@@ -57,34 +57,32 @@ compaired <- list(c("Control", "Ca(OH)2"),
                   c("Control","CO2"), 
                   c("Control","CO2+Ca(OH)2"),
                   c("Control","CO2+NaOH"))
-for (i in 1:9) 
-{
-  data_cor<- traits[,i]
-  hgdata_treat_cor <- data.frame(conditionshg,data_cor)
-  hgdata_treat_cor$conditionshg <- factor(conditionshg, level=c("Control", "Ca(OH)2","CO2","CO2+Ca(OH)2","CO2+NaOH"), ordered=TRUE)
-  p<-ggplot(hgdata_treat_cor,aes(conditionshg,data_cor,color=conditionshg),y="Correlation R2", title =names(traits)[i], ylim=c(min(data_cor),max(data_cor)*1.09),palette = "jco", ordered=TRUE)+
-    geom_boxplot()+  
-    geom_point(size=2)+
+for (i in 1:9) {
+  data_cor <- traits[, i]
+  hgdata_treat_cor <- data.frame(conditionshg, data_cor)
+  hgdata_treat_cor$conditionshg <- factor(conditionshg, level = c("Control", "Ca(OH)2", "CO2", "CO2+Ca(OH)2", "CO2+NaOH"), ordered = TRUE)
+  
+  # 添加y轴标签
+  y_label <- names(traits)[i]
+  
+  p <- ggplot(hgdata_treat_cor, aes(conditionshg, data_cor, color = conditionshg)) +
+    geom_boxplot() +
+    geom_point(size = 2) +
     theme_classic() +
-    geom_signif(comparisons = compaired,step_increase = 0.1,map_signif_level =T,test = t.test)+
-    theme(legend.position="none",axis.title.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_text(angle = 30, hjust = 1))
-    plot_list[[i]] = p 
+    geom_signif(comparisons = compaired, step_increase = 0.1, map_signif_level = T, test = t.test) +
+    labs(y = y_label) +  # 设置标题和y轴标签
+    theme(legend.position = "none", axis.title.x = element_blank(), axis.text.x = element_text(angle = 30, hjust = 1))
+  
+  plot_list[[i]] = p
 }
-##fig 1
-pdf("traits_plots.pdf",width=8,height=12) 
-grid.newpage()
-pushViewport(viewport(layout = grid.layout(3,3)))
-print(plot_list[[1]], vp = viewport(layout.pos.row = 1, layout.pos.col = 1))
-print(plot_list[[2]], vp = viewport(layout.pos.row = 1, layout.pos.col = 2))
-print(plot_list[[3]], vp = viewport(layout.pos.row = 1, layout.pos.col = 3))
-print(plot_list[[4]], vp = viewport(layout.pos.row = 2, layout.pos.col = 1))
-print(plot_list[[5]], vp = viewport(layout.pos.row = 2, layout.pos.col = 2))
-print(plot_list[[6]], vp = viewport(layout.pos.row = 2, layout.pos.col = 3))
-print(plot_list[[7]], vp = viewport(layout.pos.row = 3, layout.pos.col = 1))
-print(plot_list[[8]], vp = viewport(layout.pos.row = 3, layout.pos.col = 2))
-print(plot_list[[9]], vp = viewport(layout.pos.row = 3, layout.pos.col = 3))
-dev.off()  
 
+##fig 1
+
+ 
+grid.arrange(plot_list[[1]], plot_list[[2]], plot_list[[3]],
+             plot_list[[4]], plot_list[[5]], plot_list[[6]],
+             plot_list[[7]], plot_list[[8]], plot_list[[9]],
+             ncol = 3) 
 #melt---
 library(tidyr)
 library(reshape2)
@@ -95,7 +93,7 @@ mydata<-melt(traits1,                       #待转换的数据集名称
              value.name="value"             #转换后的度量值名称
 )
 mydata$conditionshg <- factor(conditionshg, level=c("Control", "Ca(OH)2","CO2","CO2+Ca(OH)2","CO2+NaOH"), ordered=TRUE)
-pdf("traits_plots_wrap.pdf",width=8,height=12) 
+pdf("traits_plots_wrap.pdf",width=8,height=6) 
 mydata %>%  
 ggplot(aes(conditionshg,value),ordered=T)+
   geom_boxplot(color='blue')+
@@ -112,12 +110,27 @@ dev.off()
 library(factoextra)
 citation("factoextra")
 traits.pca <- prcomp(traits[,1:9], scale. = TRUE)
-pdf("D:/my paper/2018-OLIVINE/滨共表达和论文/2021R/fig/tratis.pca.pdf", width=6, height=3)
-fviz_pca_var(traits.pca ,col.var = "contrib",
+
+p10<- fviz_pca_var(traits.pca ,col.var = "contrib",
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"))+
   theme_classic()
-dev.off()
-
+ggsave("p10.pdf", p10, width=12, height=20)
+library(patchwork)
+# Arrange the plots using patchwork
+p11<- (plot_list[[1]] + plot_list[[2]] + plot_list[[3]])/
+    (plot_list[[4]] + plot_list[[5]] + plot_list[[6]])/
+    (plot_list[[7]] + plot_list[[8]] + plot_list[[9]])  
+ggsave("tratis.pca.pdf", p11,width=7, height=10)
+#anova analysis----------------------
+traits$con <-conditionshg
+result <- aov(CO2 ~ con, data = traits)
+library(multcomp)
+# 进行Tukey多重比较
+comp <- glht(result, linfct = mcp(con = "Tukey"))
+# 查看ANOVA分析结果
+summary(result)
+summary(comp) 
+ 
 # Plot the sample tree: Open a graphic output window of size 12 by 9 inches
 # The user should change the dimensions if the window is too large or too small.
 #pdf(file = "Plots/sampleClustering.pdf", width = 12, height = 9);sizeGrWindow(12,9)
