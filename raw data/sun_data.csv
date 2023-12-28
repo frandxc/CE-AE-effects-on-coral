@@ -1,0 +1,104 @@
+treat,Accession,Description,Fold change OA/Control,T test P value
+OA,XP_027040562.1,"ATP synthase subunit g, mitochondrial-like [Pocillopora damicornis]",1.34,0.028
+OA,AIY49984.1,"ATP8, partial (mitochondrion) [Pocillopora damicornis]",1.2,0.0018
+OA,XP_027045703.1,bcl-2 homologous antagonist/killer-like [Pocillopora damicornis],1.26,0.0035
+OA,XP_027047084.1,calcineurin B homologous protein 1-like [Pocillopora damicornis],1.23,0.026
+OA,XP_027059157.1,calmodulin-like [Pocillopora damicornis],1.68,0.047
+OA,XP_027049229.1,carbonic anhydrase 2-like [Pocillopora damicornis],0.81,0.008
+OA,XP_027048563.1,CUB and sushi domain-containing protein 3-like [Pocillopora damicornis],0.81,0.027
+OA,XP_027039713.1,cytochrome b5-like isoform X2 [Pocillopora damicornis],1.75,0.032
+OA,ABO77160.1,cytochrome c oxidase subunit 1 (mitochondrion) [Pocillopora damicornis],0.81,0.027
+OA,XP_027051888.1,glutathione S-transferase kappa 1-like [Pocillopora damicornis],1.2,0.017
+OA,XP_027050603.1,palmitoyltransferase ZDHHC5-like isoform X2 [Pocillopora damicornis],1.22,0.004
+OA,XP_027046676.1,solute carrier family 26 member 10-like [Pocillopora damicornis],1.21,0.013
+OA,XP_027051627.1,synapse-associated protein 1-like [Pocillopora damicornis],0.79,0.016
+OA,XP_027059784.1,tektin-1-like [Pocillopora damicornis],1.23,0.012
+OA,XP_027038831.1,temperature-induced lipocalin-1-like [Pocillopora damicornis],0.81,0.044
+OA,XP_027040562.1,"ATP synthase subunit g, mitochondrial-like [Pocillopora damicornis]",1.34,0.028
+ETOA,XP_027041925.1,"2,3-bisphosphoglycerate-independent phosphoglycerate mutase-like [Pocillopora damicornis]",0.76,0.00064
+ETOA,XP_027054823.1,2-oxoglutarate-dependent dioxygenase mpl2-like [Pocillopora damicornis],0.81,0.0012
+ETOA,XP_027050477.1,"3-hydroxyanthranilate 3,4-dioxygenase-like [Pocillopora damicornis]",0.8,0.004
+ETOA,XP_027059144.1,A disintegrin and metalloproteinase with thrombospondin motifs adt-1-like isoform X2 [Pocillopora damicornis],0.57,0.00021
+ETOA,XP_027060445.1,acid ceramidase-like [Pocillopora damicornis],0.77,0.0364
+ETOA,XP_027052646.1,acid phosphatase type 7-like [Pocillopora damicornis],0.8,0.00041
+ETOA,XP_027048081.1,acid phosphatase type 7-like isoform X2 [Pocillopora damicornis],0.82,0.0053
+ETOA,XP_027044856.1,actin-depolymerizing factor 1-like [Pocillopora damicornis],0.75,0.0017
+ETOA,XP_027057761.1,acyl-CoA-binding protein-like [Pocillopora damicornis],0.77,0.0244
+ETOA,XP_027045120.1,adenosine kinase-like isoform X2 [Pocillopora damicornis],0.79,0.0091
+ETOA,XP_027047393.1,alcohol dehydrogenase class-3-like [Pocillopora damicornis],0.83,0.0095
+ETOA,XP_027039082.1,alpha-L-fucosidase-like [Pocillopora damicornis],0.81,0.0175
+ETOA,XP_027043397.1,alpha-L-fucosidase-like [Pocillopora damicornis],0.79,0.0031
+ETOA,XP_027044746.1,alpha-N-acetylgalactosaminidase-like [Pocillopora damicornis],0.75,0.00079
+ETOA,XP_027045460.1,aminoacylase-1-like [Pocillopora damicornis],0.79,0.0013
+ETOA,XP_027040562.1,"ATP synthase subunit g, mitochondrial-like [Pocillopora damicornis]",1.35,0.0157
+ETOA,XP_027038068.1,beta-hexosaminidase subunit beta-like [Pocillopora damicornis],0.74,0.00018
+ETOA,XP_027046752.1,betaine--homocysteine S-methyltransferase 1-like [Pocillopora damicornis],0.81,0.0066
+ETOA,XP_027040382.1,calponin-1-like [Pocillopora damicornis],0.83,0.00033
+ETOA,XP_027042258.1,calumenin-like [Pocillopora damicornis],2.87,0.0011
+ETOA,XP_027057379.1,cAMP-responsive element modulator-like isoform X2 [Pocillopora damicornis],1.2,0.0025
+ETOA,XP_027056998.1,carbonic anhydrase 2-like [Pocillopora damicornis],0.62,0.00013
+ETOA,XP_027048563.1,CUB and sushi domain-containing protein 3-like [Pocillopora damicornis],0.58,0.025
+ETOA,XP_027050640.1,cysteine-rich protein 1 isoform X2 [Pocillopora damicornis],0.67,0.035
+ETOA,XP_027050610.1,"cytochrome c oxidase subunit 6A, mitochondrial-like [Pocillopora damicornis]",1.37,0.0096
+ETOA,XP_027049885.1,cytochrome P450 3A24-like [Pocillopora damicornis],1.22,0.016
+ETOA,XP_027046938.1,cytoplasmic dynein 1 intermediate chain 2-like [Pocillopora damicornis],0.8,0.0013
+ETOA,XP_027049962.1,cytosolic 5'-nucleotidase 3-like isoform X2 [Pocillopora damicornis],1.2,0.013
+ETOA,XP_027039740.1,dehydrogenase/reductase SDR family member 7-like [Pocillopora damicornis],1.24,0.0072
+ETOA,XP_027038757.1,dipeptidyl peptidase 3-like isoform X2 [Pocillopora damicornis],0.79,0.003
+ETOA,XP_027044714.1,DNA-directed RNA polymerase II subunit RPB11-like [Pocillopora damicornis],1.28,0.049
+ETOA,XP_027042186.1,ectin-like isoform X1 [Pocillopora damicornis],0.76,0.002
+ETOA,XP_027037342.1,"endoplasmic reticulum resident protein 29-like, partial [Pocillopora damicornis]",1.23,0.000092
+ETOA,XP_027052700.1,endoplasmin-like [Pocillopora damicornis],1.39,0.0005
+ETOA,XP_027040814.1,endothelin-converting enzyme homolog isoform X4 [Pocillopora damicornis],0.83,0.0005
+ETOA,XP_027048922.1,enolase 4-like isoform X1 [Pocillopora damicornis],0.83,0.016
+ETOA,XP_027047632.1,excitatory amino acid transporter 1-like [Pocillopora damicornis],0.81,0.00023
+ETOA,XP_027042358.1,fatty acyl-CoA reductase 1-like [Pocillopora damicornis],0.78,0.00063
+ETOA,XP_027037771.1,"ferritin, middle subunit-like [Pocillopora damicornis]",1.33,0.0036
+ETOA,XP_027058362.1,galaxin-2-like isoform X2 [Pocillopora damicornis],0.74,0.00037
+ETOA,XP_027049351.1,glucosamine-6-phosphate isomerase 2-like [Pocillopora damicornis],0.83,0.0047
+ETOA,XP_027056232.1,"glutathione S-transferase Mu 2-like, partial [Pocillopora damicornis]",0.7,0.0012
+ETOA,XP_027039195.1,"Golgi-associated plant pathogenesis-related protein 1-like, partial [Pocillopora damicornis]",0.79,0.047
+ETOA,XP_027044964.1,granulins-like [Pocillopora damicornis],0.77,0.046
+ETOA,BAD89540.1,heat shock protein 70 [Pocillopora damicornis],1.27,0.004
+ETOA,XP_027037242.1,heat shock protein 70 A1-like [Pocillopora damicornis],0.82,0.029
+ETOA,XP_027050152.1,"histone H2B, gonadal-like [Pocillopora damicornis]",1.2,0.028
+ETOA,XP_027051288.1,ketimine reductase mu-crystallin-like isoform X3 [Pocillopora damicornis],0.82,0.024
+ETOA,XP_027043806.1,low choriolytic enzyme-like [Pocillopora damicornis],0.77,0.00045
+ETOA,XP_027037214.1,LOW QUALITY PROTEIN: cytosolic phospholipase A2-like [Pocillopora damicornis],1.2,0.022
+ETOA,XP_027046713.1,LOW QUALITY PROTEIN: ribosome-binding protein 1-like [Pocillopora damicornis],0.83,0.00043
+ETOA,XP_027047119.1,major surface trophozoite antigen 11-like [Pocillopora damicornis],1.33,0.033
+ETOA,XP_027042353.1,mucin-1-like [Pocillopora damicornis],1.32,0.0078
+ETOA,XP_027050804.1,N-acetylglucosamine-6-sulfatase-like [Pocillopora damicornis],0.82,0.0065
+ETOA,XP_027048067.1,ophiophagus venom factor-like [Pocillopora damicornis],1.24,0.036
+ETOA,XP_027042366.1,optic atrophy 3 protein homolog [Pocillopora damicornis],1.23,0.031
+ETOA,XP_027050603.1,palmitoyltransferase ZDHHC5-like isoform X2 [Pocillopora damicornis],1.25,0.022
+ETOA,XP_027048159.1,"phosphoenolpyruvate carboxykinase, cytosolic [GTP]-like [Pocillopora damicornis]",0.69,0.00049
+ETOA,XP_027053202.1,phosphoglycerate kinase-like isoform X1 [Pocillopora damicornis],0.83,0.0091
+ETOA,XP_027054469.1,"prolyl endopeptidase-like, partial [Pocillopora damicornis]",0.72,0.00028
+ETOA,XP_027043335.1,"pro-neuregulin-2, membrane-bound isoform-like, partial [Pocillopora damicornis]",0.8,0.0086
+ETOA,XP_027035727.1,protein kinase C-binding protein NELL1-like [Pocillopora damicornis],1.29,0.036
+ETOA,XP_027039163.1,protein PRY1-like isoform X2 [Pocillopora damicornis],0.72,0.0029
+ETOA,XP_027057316.1,"protein turtle homolog B-like, partial [Pocillopora damicornis]",0.83,0.0045
+ETOA,XP_027040927.1,protein/nucleic acid deglycase DJ-1-like [Pocillopora damicornis],0.8,0.00029
+ETOA,XP_027055909.1,rhamnose-binding lectin-like isoform X1 [Pocillopora damicornis],1.3,0.0011
+ETOA,XP_027052654.1,S-adenosylmethionine synthase-like [Pocillopora damicornis],0.75,0.00062
+ETOA,XP_027048297.1,SAP domain-containing ribonucleoprotein-like [Pocillopora damicornis],0.79,0.0014
+ETOA,XP_027043526.1,serine/arginine-rich splicing factor 6-like [Pocillopora damicornis],0.79,0.000011
+ETOA,XP_027046270.1,sialate O-acetylesterase-like [Pocillopora damicornis],0.81,0.0061
+ETOA,XP_027037769.1,sialin-like [Pocillopora damicornis],1.28,0.021
+ETOA,XP_027046676.1,solute carrier family 26 member 10-like [Pocillopora damicornis],0.74,0.00021
+ETOA,XP_027049623.1,stimulator of interferon genes protein-like isoform X1 [Pocillopora damicornis],1.25,0.0097
+ETOA,XP_027037839.1,"sushi, von Willebrand factor type A, EGF and pentraxin domain-containing protein 1-like [Pocillopora damicornis]",1.43,0.0025
+ETOA,XP_027051627.1,synapse-associated protein 1-like [Pocillopora damicornis],0.7,0.022
+ETOA,XP_027055084.1,tachylectin-2-like [Pocillopora damicornis],1.24,0.034
+ETOA,XP_027042321.1,TATA-box-binding protein-like [Pocillopora damicornis],1.24,0.02
+ETOA,XP_027046737.1,thimet oligopeptidase-like [Pocillopora damicornis],0.73,0.000012
+ETOA,XP_027046744.1,"threonine--tRNA ligase, cytoplasmic-like [Pocillopora damicornis]",1.21,0.017
+ETOA,XP_027049117.1,titin-like [Pocillopora damicornis],0.76,0.0054
+ETOA,XP_027045269.1,translationally-controlled tumor protein homolog [Pocillopora damicornis],0.8,0.039
+ETOA,XP_027044296.1,translocation protein SEC62-like [Pocillopora damicornis],1.22,0.014
+ETOA,XP_027043050.1,trichohyalin-like isoform X4 [Pocillopora damicornis],0.77,0.00041
+ETOA,XP_027045199.1,ubiquitin-conjugating enzyme E2 variant 1-like [Pocillopora damicornis],0.81,0.00048
+ETOA,XP_027049173.1,vitamin K epoxide reductase complex subunit 1-like [Pocillopora damicornis],1.38,0.0015
+ETOA,XP_027054090.1,wnt inhibitory factor 1-like [Pocillopora damicornis],0.79,0.044
+ETOA,XP_027060023.1,X-linked retinitis pigmentosa GTPase regulator-like isoform X2 [Pocillopora damicornis],0.76,0.0075
