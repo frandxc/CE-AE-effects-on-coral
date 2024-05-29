@@ -19,12 +19,8 @@ library(limma)
 library(cluster)
 library(ggfortify)
 library(WGCNA)
-setwd('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code')
-# annotation exctraction
-# annotation exctraction--
-# datahgraw <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R/raw data/gene_host.csv', header = T, row.names=1) 
-# h_annot <- datahgraw[,21:30]
-load("D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code/RData/Fig2.RData")
+
+load("Fig2.RData")
 protein_data_1 <- data_imp@assays@data@listData[[1]]
 protein_data_2 <-data.frame(protein_data_1[rownames(protein_data_1) %in% rownames(filtered_coral),])
 
@@ -65,7 +61,7 @@ par(cex = 0.6);
 par(mar = c(0,4,2,0))
 
 # traitData------
-traitData = read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/traits.csv', header = T, row.names=1);
+traitData = read.csv('../raw data/traits.csv', header = T, row.names=1);
 dim(traitData)
 names(traitData)
 allTraits = traitData[,1:9];
@@ -207,7 +203,7 @@ for(module in substring(colnames(MEs),3)){
   datKME=cbind(datKME,rep(module,length(datKME)))
   write.table(datKME,quote =FALSE,sep='\t',row.names = TRUE,append = TRUE,file = "All_Gene_KME.txt",col.names = FALSE)
 }
-All_Gene_KME<-read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code/All_Gene_KME.txt',sep='')
+All_Gene_KME<-read.csv('All_Gene_KME.txt',sep='')
 colnames(All_Gene_KME)<-c('id','val','col')
 # wgcna.Module-trait.heatmap.pdf-------
 
@@ -223,11 +219,11 @@ for (i in 1:length(colors)) {
   MElength[i, ] <- length(All_Gene_KME[which(All_Gene_KME$col == colors[i]), 1])
 }
 
-  MElength1=as.character(MElength[,1])
-  text1 =paste(substring(colnames(MEs[,]),3),"\n",'n=',MElength1)
+MElength1=as.character(MElength[,1])
+text1 =paste(substring(colnames(MEs[,]),3),"\n",'n=',MElength1)
 pdf("wgcna.protein-trait.heatmap.pdf", width =8, height =3)
 textMatrix =  paste(moduleTraitCor1[,], "\n",
-                   moduleTraitPvalue1[,], "", sep = "");
+                    moduleTraitPvalue1[,], "", sep = "");
 dim(textMatrix) = dim(moduleTraitCor[,])
 par(mar = c(6, 6, 1, 2));
 labeledHeatmap(Matrix = moduleTraitCor[,],
@@ -366,45 +362,3 @@ combined_plot <- plot_grid(plotlist = all_plots_list, ncol = 2, align = 'v')  # 
 ggsave("combined_plots.pdf", combined_plot, w = 20, h = 13)
 
 
-#all color kegg-------------
-# 创建一个空的图形列表
-kegg_plots_list <- list()
-load("kegg_info.RData")
-Porites.orgdb <- loadDb("D:/my paper/2018-OLIVINE/滨共表达和论文/2021R/make orgdb/org.P_pukoensis.eg.sqlite")
-pathway2gene <- AnnotationDbi::select(Porites.orgdb,
-                                      keys = keys(Porites.orgdb),
-                                      columns = c("Pathway","KO")) %>%
-  na.omit() %>%
-  dplyr::select(Pathway, GID)
-
-# 循环生成并保存所有颜色的 KEGG 图
-for (i in 1:length(colors)){
-  # 创建每个颜色的 KEGG 图
-  protein_data <- data.frame(All_Gene_KME[which(All_Gene_KME$col == colors[i]), 1])
-  proteinlist <- protein_data[, 1]
-  
-  # 运行 KEGG 富集分析
-  ekp_colors_12 <- enricher(proteinlist, TERM2GENE = pathway2gene, TERM2NAME = pathway2name,
-                            pvalueCutoff = 0.05, qvalueCutoff = 1, pAdjustMethod = "BH", minGSSize = 5)
-  ekp_colors_filtered <- ekp_colors_12@result[ekp_colors_12@result$pvalue < 0.05 & ekp_colors_12@result$Count > 4, ]
-  
-  # 生成 KEGG 图
-  kegg_plot <- ggplot(ekp_colors_filtered[1:10, ]) +
-    ggtitle(colors[i]) +
-    aes(x = Description, y = -log(pvalue), size = Count) +
-    geom_point(shape = 21, color = "black") +
-    theme_classic() +
-    coord_flip() +
-    ylim(0, 20) +
-    scale_size_continuous(guide = guide_legend(title = "Count", limits = c(0, 25)))
-  
-  # 将 KEGG 图添加到列表
-  kegg_plots_list[[i]] <- kegg_plot
-}
-
-# 组合所有 KEGG 图
-combined_kegg_plot <- cowplot::plot_grid(plotlist = kegg_plots_list, ncol = 2, align = 'v')  # 使用 'v' 对齐垂直
-
-# 保存组合的 KEGG 图
-ggsave("combined_kegg_plots.pdf", combined_kegg_plot, w = 13, h = 6)
-save.image(file = "D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code/RData/Fig3WGCNA_GO_KEGG.RData")
