@@ -9,9 +9,8 @@ library(Hmisc)
 library(PerformanceAnalytics)
 library(WGCNA)
 library(reshape2)
-setwd('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code')
-traits <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/traits.csv', header = T, row.names=1) 
-sal_ph_alk <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/sal_ph_alk.csv', header = T, row.names=1) 
+traits <- read.csv('../raw data/traits.csv', header = T, row.names=1) 
+sal_ph_alk <- read.csv('../raw data/sal_ph_alk.csv', header = T, row.names=1) 
 
 #figs-----
 sal=sal_ph_alk[,1:5]
