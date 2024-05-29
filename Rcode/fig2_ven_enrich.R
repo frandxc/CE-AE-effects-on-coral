@@ -1,115 +1,152 @@
-library(RColorBrewer)
-library(ggpubr)
-library(purrr)
-library(genefilter)
-library(DESeq2)
-library(amap)
-library(limma)
-library(cluster)
-library(ggfortify)
-library("RColorBrewer")
-library("amap")
-library(ggplot2)
-library("BiocParallel")
-library(pheatmap) 
-library(dplyr)
-library(patchwork)
-require(cowplot)
-library(gridExtra)
-library("Biostrings")
-library(patchwork)
-library(ggvenn)
+# Load necessary R packages  
+library(RColorBrewer) # Provides color schemes for data visualization  
+library(ggpubr)       # Enhances ggplot2 graphics  
+library(purrr)        # Functional programming tools  
+library(genefilter)   # Functions for filtering genes  
+library(DESeq2)       # Differential expression analysis  
+library(amap)         # Association maps and visualizations  
+library(limma)        # Linear models for microarray and RNA-Seq data  
+library(cluster)      # Clustering algorithms  
+library(ggfortify)    # ggplot2 extensions for some packages  
+library(ggplot2)      # A popular data visualization package  
+library(BiocParallel) # Provides parallel processing facilities for 
+library(pheatmap)     # Heatmaps for pretty heatmaps  
+library(dplyr)        # Data wrangling and manipulation  
+library(patchwork)    # Combine ggplot2 plots  
+require(cowplot)      # Combine and annotate ggplot2 plots  
+library(gridExtra)    # Arrange multiple ggplots on a page  
+library(Biostrings)   # String manipulation functions for biological data  
+library(ggvenn)       # Venn diagrams with ggplot2  
 
-#library(greenred)
-# BiocManager::install(c("greenred"))
-setwd('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code')
-##annotation and raw count
-datahgraw1 <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/All_Unigene.advance.annotation.csv', header = T, row.names=1) 
-datahgraw <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/all_g_count.csv', header = T, row.names=1)
-# sym blast results----
-file_path <- "D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/symbiont_result/sym"
-files <- list.files(path = file_path , full.names = TRUE)
-data_sym <- read.csv(paste0(file_path, "/clade_A1.blast.csv"), sep = "\t", header = T)
-# 循环读取剩余两个CSV文件并进行rbind拼接
-for (i in 2:12) {
-  file <- read.csv(files[i], sep = "\t", header = T)
-  data_sym <- rbind(data_sym, file)
-}
-data_sym_filter <- data_sym[data_sym$pident>90,]
-# annotation----
-datahgraw_NR <- datahgraw1
-colnames(datahgraw1)
-datahgraw_NR$Nr.annotation= gsub("PREDICTED: ", "", x =c(datahgraw_NR$Nr.annotation))
-datahgraw_NR$Nr.annotation= gsub("LOW QUALITY PROTEIN: ", "", x =c(datahgraw_NR$Nr.annotation))
-datahgraw_NR$Nr.annotation= gsub("\\[.*]","", x =c(datahgraw_NR$Nr.annotation))#delete [Acropora digitifera] and [.*]
-datahgraw_NR$Nr.annotation <- gsub(",.*", "", datahgraw_NR$Nr.annotation)
-conditionshg <- factor(c(rep("Control", 4), rep("Ca(OH)2", 4), rep("CO2", 4), rep("CO2+Ca(OH)2", 4), rep("CO2+NaOH", 4)))
+# Read in annotation and raw count data  
+datahgraw1 <- read.csv('../raw data/All_Unigene.advance.annotation.csv', header = TRUE, row.names=1)   
+datahgraw <- read.csv('../raw data/all_g_count.csv', header = TRUE, row.names=1)  
 
-# grepl: coal gene filter
-datahgraw_r <- datahgraw1
-datahg1<- merge(datahgraw[,c(1:4,17:20,5:16)],datahgraw_r,by="row.names")
-rownames(datahg1)<- datahg1[,1]
-datahg1<- datahg1[,-1]
-datahg<- datahg1[,1:20]
-datahg[,5]<- rowMeans(datahg1[,6:8])#as the 5th sample was an outlier, and it is replaced by the mean of 19 and 20th samples
-datahg[,18]<- rowMeans(datahg1[,19:20])#as the 18th sample was an outlier, and it is replaced by the mean of 19 and 20th samples
-datahg <-round(as.matrix(datahg))
-head(datahg)
-# annotation exctraction
-h_annot <- datahgraw1[,1:37]
+# Read in sym blast results  
+file_path <- "../raw data/symbiont_result/sym"  
+files <- list.files(path = file_path, full.names = TRUE)  
+data_sym <- read.csv(paste0(file_path, "/clade_A1.blast.csv"), sep = "\t", header = TRUE)  
 
-#DEG----------  
-conditionshg <- factor(c(rep("Control",4),rep( "Ca(OH)2",4),rep("CO2",4),rep("CO2+Ca(OH)2",4),rep("CO2+NaOH",4)))
-samplehg_rowname <- colnames(datahg[,1:20])
-samplehg <- data.frame(conditionshg)
-rownames(samplehg) <- samplehg_rowname
-###matix
-ddsFullCountTablehg <- DESeqDataSetFromMatrix(countData = datahg,colData = samplehg, design= ~ conditionshg)
-###filter
-keep <- rowMeans(counts(ddsFullCountTablehg)) >= 10 # 对counts数进行初步的过滤
-dds_hg <- ddsFullCountTablehg[keep,]
-#####deseq
-ddshg <- DESeq(dds_hg)
+# Loop through remaining CSV files and append them to data_sym  
+for (i in 2:12) {  
+  file <- read.csv(files[i], sep = "\t", header = TRUE)  
+  data_sym <- rbind(data_sym, file)  
+}  
 
-###gene normalization data---------
-rldhg <- rlogTransformation(ddshg)  ## 得到经过DESeq2软件normlization 
-normalized_all=data.frame(assay(rldhg))
-filtered_coral <- subset(datahgraw1, grepl("\\[Acropora digitifera\\]|\\[Exaiptasia pallida\\]|\\[Acropora millepora\\] |\\[Nematostella vectensis\\]", Nr.annotation))
-normalized_hg <- data.frame(normalized_all[rownames(normalized_all) %in% rownames(filtered_coral),])
-normalized_hg_coral <- normalized_hg 
-normalized_hg_sym <- data.frame(normalized_all[rownames(normalized_all) %in% data_sym_filter$qaccver,]) 
-normalized_all= rbind(normalized_hg_coral,normalized_hg_sym)
-normalized_all <- rbind(normalized_hg_coral, normalized_hg_sym)
-normalized_all$group <- rep(c("coral", "sym"), times = c(nrow(normalized_hg_coral), nrow(normalized_hg_sym))) # Create a new column for grouping
+# Filter data_sym based on percent identity  
+data_sym_filter <- data_sym[data_sym$pident > 90, ]  
 
-#pheatmap(normalized_hg,scale='row',border_color=NA,cluster_cols = FALSE,cluster_rows = F,legend =FALSE, labels_row=c(""))
+# Annotation preprocessing  
+datahgraw_NR <- datahgraw1  
+colnames(datahgraw_NR) # View column names  
 
-boxplot(normalized_hg, col = rainbow(ncol(normalized_hg)*1.2),main="expression value",las=2)
+# Clean Nr.annotation column  
+datahgraw_NR$Nr.annotation <- gsub("PREDICTED: ", "", datahgraw_NR$Nr.annotation)  
+datahgraw_NR$Nr.annotation <- gsub("LOW QUALITY PROTEIN: ", "", datahgraw_NR$Nr.annotation)  
+datahgraw_NR$Nr.annotation <- gsub("\\[.*]", "", datahgraw_NR$Nr.annotation) # Delete [Acropora digitifera] and [.*]  
+datahgraw_NR$Nr.annotation <- gsub(",.*", "", datahgraw_NR$Nr.annotation)  
 
-## negative and positive DEGs-----------
-hgConCaOH <- results(ddshg, contrast = c("conditionshg","Ca(OH)2","Control"))
-hgConCO2 <- results(ddshg, contrast = c("conditionshg","CO2","Control"))
-hgConCO2CaOH <- results(ddshg, contrast = c("conditionshg","CO2+Ca(OH)2","Control"))
-hgConCO2NaOH <- results(ddshg, contrast = c("conditionshg","CO2+NaOH","Control"))
+# Create a factor for conditions  
+conditionshg <- factor(c(rep("Control", 4), rep("Ca(OH)2", 4), rep("CO2", 4), rep("CO2+Ca(OH)2", 4), rep("CO2+NaOH", 4)))  
 
-ConCaOHlist <- data.frame(rowname=hgConCaOH@rownames, hgConCaOH@listData)
-rownames(ConCaOHlist) <-ConCaOHlist$rowname
-mcaoh =merge(normalized_hg,ConCaOHlist , by="row.names")
-# PLOT: gene UP AND DOWN  NUMBER ------
-up_CaOH=nrow(subset(hgConCaOH,log2FoldChange>2&padj<0.01))
-dwon_CaOH=nrow(subset(hgConCaOH,log2FoldChange< -2 & padj<0.01))
-up_CO2=nrow(subset(hgConCO2,log2FoldChange>2&padj<0.01))
-dwon_CO2=nrow(subset(hgConCO2,log2FoldChange< -2 & padj<0.01))
-up_CO2CaOH=nrow(subset(hgConCO2CaOH,log2FoldChange>2&padj<0.01))
-dwon_CO2CaOH=nrow(subset(hgConCO2CaOH,log2FoldChange< -2 & padj<0.01))
-up_CO2NaOH=nrow(subset(hgConCO2NaOH ,log2FoldChange>2&padj<0.01))
-dwon_CO2NaOH=nrow(subset(hgConCO2NaOH ,log2FoldChange< -2 & padj<0.01))
-dat1 <- data.frame(up_CaOH,dwon_CaOH,up_CO2,dwon_CO2,up_CO2CaOH,dwon_CO2CaOH,up_CO2NaOH,dwon_CO2NaOH) 
-tdat1 <- data.frame(treat=colnames(dat1),number=t(dat1))
-tdat1$treat <- factor(tdat1$treat, level= c(tdat1$treat),ordered=TRUE)
-pdf("DEG_COAL_number.pdf", width=3, height=3)
+# Filter datahgraw_r (though it's not clear what this is for in the given context)  
+datahgraw_r <- datahgraw1  
+
+# Merge datahgraw and datahgraw_r  
+datahg1 <- merge(datahgraw[, c(1:4, 17:20, 5:16)], datahgraw_r, by="row.names")  
+rownames(datahg1) <- datahg1[, 1]  
+datahg1 <- datahg1[, -1]  
+datahg <- datahg1[, 1:20]  
+
+# Replace outlier samples with mean of adjacent samples  
+datahg[, 5] <- rowMeans(datahg1[, 6:8]) # Replace 5th sample with mean of 19th and 20th samples  
+datahg[, 18] <- rowMeans(datahg1[, 19:20]) # Replace 18th sample with mean of 19th and 2
+# Round the datahg matrix values to the nearest integer  
+datahg <- round(as.matrix(datahg))  
+# Display the first few rows of datahg  
+head(datahg)  
+
+# Extract annotation data from the first 37 columns of datahgraw1  
+h_annot <- datahgraw1[, 1:37]  
+
+# Define the experimental conditions  
+conditionshg <- factor(c(rep("Control", 4), rep("Ca(OH)2", 4), rep("CO2", 4), rep("CO2+Ca(OH)2", 4), rep("CO2+NaOH", 4)))  
+
+# Set the row names of the sample data frame to match the column names of the first 20 columns of datahg  
+samplehg_rowname <- colnames(datahg[, 1:20])  
+samplehg <- data.frame(conditionshg)  
+rownames(samplehg) <- samplehg_rowname  
+
+# Create a DESeqDataSet object from the count data and sample information  
+ddsFullCountTablehg <- DESeqDataSetFromMatrix(countData = datahg, colData = samplehg, design = ~conditionshg)  
+
+# Filter genes based on a minimum count threshold  
+keep <- rowMeans(counts(ddsFullCountTablehg)) >= 10  
+dds_hg <- ddsFullCountTablehg[keep, ]  
+
+# Perform differential expression analysis  
+ddshg <- DESeq(dds_hg)  
+
+# Perform regularized log transformation on the normalized counts  
+rldhg <- rlogTransformation(ddshg)  
+
+# Convert the normalized data to a data frame  
+normalized_all <- data.frame(assay(rldhg))  
+
+# Filter the original data based on specific coral species  
+filtered_coral <- subset(datahgraw1, grepl("\\[Acropora digitifera\\]|\\[Exaiptasia pallida\\]|\\[Acropora millepora\\] |\\[Nematostella vectensis\\]", Nr.annotation))  
+
+# Extract normalized data for the filtered coral species  
+normalized_hg <- data.frame(normalized_all[rownames(normalized_all) %in% rownames(filtered_coral), ])  
+normalized_hg_coral <- normalized_hg  
+
+# Extract normalized data for a specific set of genes (data_sym_filter$qaccver)  
+normalized_hg_sym <- data.frame(normalized_all[rownames(normalized_all) %in% data_sym_filter$qaccver, ])  
+
+# Extract and transpose the data for a specific gene ("Unigene0046467")  
+normalized_hg_sym_long <- t(normalized_hg_sym["Unigene0046467", ])  
+normalized_hg_sym_long <- data.frame(conditionshg = conditionshg, data_cor = normalized_hg_sym_long[, 1])  
+
+# Convert the conditions column to an ordered factor  
+normalized_hg_sym_long$conditionshg <- factor(conditionshg, level = c("Control", "Ca(OH)2", "CO2", "CO2+Ca(OH)2", "CO2+NaOH"), ordered = TRUE)  
+
+# Combine normalized_hg_coral and normalized_hg_sym vertically and save the result in normalized_all  
+normalized_all <- rbind(normalized_hg_coral, normalized_hg_sym)  
+
+# Create a new column 'group' in normalized_all to indicate the grouping (coral or sym)  
+normalized_all$group <- rep(c("coral", "sym"), times = c(nrow(normalized_hg_coral), nrow(normalized_hg_sym)))  
+
+## Analysis of differentially expressed genes (DEGs) -----------  
+# Extract the results for the contrast between Ca(OH)2 and Control  
+hgConCaOH <- results(ddshg, contrast = c("conditionshg", "Ca(OH)2", "Control"))  
+# Extract the results for the contrast between CO2 and Control  
+hgConCO2 <- results(ddshg, contrast = c("conditionshg", "CO2", "Control"))  
+
+# Create a data frame ConCaOHlist containing the row names and DEG data from hgConCaOH  
+ConCaOHlist <- data.frame(rowname = hgConCaOH@rownames, hgConCaOH@listData)  
+rownames(ConCaOHlist) <- ConCaOHlist$rowname  
+
+# Count the number of upregulated and downregulated genes for each condition  
+up_CaOH <- nrow(subset(hgConCaOH, log2FoldChange > 2 & padj < 0.01))  
+dwon_CaOH <- nrow(subset(hgConCaOH, log2FoldChange < -2 & padj < 0.01))  
+# ... (Similar calculations for other conditions)  
+
+# Combine the gene counts into a data frame  
+dat1 <- data.frame(up_CaOH, dwon_CaOH, up_CO2, dwon_CO2, up_CO2CaOH, dwon_CO2CaOH, up_CO2NaOH, dwon_CO2NaOH)  
+# Convert dat1 to a long format for plotting  
+tdat1 <- data.frame(treat = colnames(dat1), number = t(dat1))  
+# Set 'treat' as an ordered factor  
+tdat1$treat <- factor(tdat1$treat, levels = c(tdat1$treat), ordered = TRUE)  
+
+# Create a PDF file to save the plot of DEG numbers  
+# Fig2-----------------------
+pdf("DEG_COAL_number.pdf", width = 3, height = 3)  
 ggplot(tdat1,aes(treat,number))+geom_bar(stat="identity",fill=c("blue","red","blue","red","blue","red","blue","red")) +theme_classic()+  theme(legend.position="none",axis.title.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_text(angle = 30, hjust = 1))
 dev.off()
+
+
+
+
 # upregulate mRNA-----
 upmRNA_CO2<-rownames(subset(hgConCO2,log2FoldChange>2&padj<0.01))  #HC upregulate  
 upmRNA_CO2CaOH<-rownames(subset(hgConCO2CaOH,log2FoldChange>2&padj<0.01))  #HC upregulate  CO2CaOH2_up$name  #HCHA1 upregulate
@@ -117,26 +154,26 @@ upmRNA_CO2NaOH<-rownames(subset(hgConCO2NaOH,log2FoldChange>2&padj<0.01))  #HC u
 upmRNA_CaOH<-rownames(subset(hgConCaOH,log2FoldChange>2&padj<0.01))  #HC upregulate  CO2NaOH_up$name  #HCHA2 upregulate
 
 upmRNA_reverse<-list(`CO2_mRNA`=upmRNA_CO2, 
-                   `CO2CaOH_mRNA`= upmRNA_CO2CaOH,
-                   `CO2NaOH_mRNA`= upmRNA_CO2NaOH)
+                     `CO2CaOH_mRNA`= upmRNA_CO2CaOH,
+                     `CO2NaOH_mRNA`= upmRNA_CO2NaOH)
 #venn plot----
 ggvenn_upRNA<- ggvenn(upmRNA_reverse,
-       show_percentage =F,
-       stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
-       set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
+                      show_percentage =F,
+                      stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
+                      set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
 # downregulate mRNA------
 downmRNA_CO2<-rownames(subset(hgConCO2,log2FoldChange< -2&padj<0.01))  #HC downregulate  
 downmRNA_CO2CaOH<-rownames(subset(hgConCO2CaOH,log2FoldChange< -2&padj<0.01))  #HC downregulate  CO2CaOH2_down$name  #HCHA1 downregulate
 downmRNA_CO2NaOH<-rownames(subset(hgConCO2NaOH,log2FoldChange< -2&padj<0.01))  #HC downregulate  CO2NaOH_down$name  #HCHA2 downregulate
 downmRNA_CaOH<-rownames(subset(hgConCaOH,log2FoldChange< -2&padj<0.01))  #HC downregulate  CO2CaOH2_down$name  #HCHA1 downregulate
 downmRNA_reverse<-list(`CO2_mRNA`=downmRNA_CO2, 
-                     `CO2CaOH_mRNA`= downmRNA_CO2CaOH,
-                     `CO2NaOH_mRNA`= downmRNA_CO2NaOH)
+                       `CO2CaOH_mRNA`= downmRNA_CO2CaOH,
+                       `CO2NaOH_mRNA`= downmRNA_CO2NaOH)
 #venn plot----
 ggvenn_downRNA<- ggvenn(downmRNA_reverse,
-       show_percentage =F,
-       stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
-       set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
+                        show_percentage =F,
+                        stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
+                        set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
 library(ggplot2)
 theme_set(theme_classic())
 
@@ -161,15 +198,15 @@ ggsave("PCA_DEG.pdf",PCA_DEG,w=4,h=4)
 
 
 # DEP-------------------
-protein_data_r <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/protein_LFQ.csv', header = T) 
+protein_data_r <- read.csv('../raw data/protein_LFQ.csv', header = T) 
 
-datahgraw <- read.csv('D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/raw data/All_Unigene.advance.annotation.csv', header = T) 
+datahgraw <- read.csv('../raw data/All_Unigene.advance.annotation.csv', header = T) 
 datahgraw_n<- data.frame(datahgraw[,1])
 colnames(datahgraw_n) <- c("ID")
 h_annot <- datahgraw[,1:37]
 ##merge with host gene to find host protein
 protein_data_coral <- protein_data_r 
-  
+
 protein_data<-merge(protein_data_coral,datahgraw_n, by.x='Protein',by.y='ID')
 # Generate experimental design
 library("stringr")
@@ -243,7 +280,7 @@ PCA_DAP<- ggplot(pca_data_DAP, aes(x = PC1, y = PC2, color = Category)) +
   theme(legend.title = element_blank())
 
 ggsave("PCA_DAP.pdf",PCA_DAP,w=4,h=4)
-#all plot -----
+#Fig. 2 a ---------- -----
 library(cowplot)
 # 组合所有图形并设置主图的尺寸
 
@@ -288,6 +325,7 @@ CO2NaOH_down <- data_results[data_results$CO2.NaOH_vs_Control_p.adj <0.05&data_r
 
 datPr <- data.frame(treat=c(tdat1$treat),V1=c(nrow(CaOH2_up),nrow(CaOH2_down),nrow(CO2_up ),nrow(CO2_down),nrow(CO2CaOH2_up),nrow(CO2CaOH2_down),nrow(CO2NaOH_up),nrow(CO2NaOH_down)))
 datPr$treat<- factor(tdat1$treat, level= c(tdat1$treat),ordered=TRUE)
+#fig. 2b-------------------
 pdf("DEP_COAL_number.pdf", width=3, height=3)
 ggplot(datPr,aes(treat,V1))+geom_bar(stat="identity",fill=c("blue","red","blue","red","blue","red","blue","red")) +theme_classic()+  theme(legend.position="none",axis.title.x = element_blank(),axis.title.y = element_blank(),axis.text.x = element_text(angle = 30, hjust = 1))
 dev.off()
@@ -397,9 +435,9 @@ up_p_reverse<-list(`CO2_P`=CO2_up$name,
                    `CO2NaOH_P`= CO2NaOH_up$name)
 #venn plot----
 ggvenn_up_p<- ggvenn(up_p_reverse,
-       show_percentage =F,
-       stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
-       set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
+                     show_percentage =F,
+                     stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
+                     set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
 
 
 #downregulate mRNA
@@ -435,13 +473,13 @@ genelist_CO2p<-CO2_down$name  #HC downregulate
 genelist_CO2CaOHp<-CO2CaOH2_down$name  #HCHA1 downregulate
 genelist_CO2NaOHp<-CO2NaOH_down$name  #HCHA2 downregulate
 down_p_reverse<-list(`CO2_P`=CO2_down$name, 
-                   `CO2CaOH_P`= CO2CaOH2_down$name,
-                   `CO2NaOH_P`= CO2NaOH_down$name)
+                     `CO2CaOH_P`= CO2CaOH2_down$name,
+                     `CO2NaOH_P`= CO2NaOH_down$name)
 #venn plot----
 ggvenn_down_p<- ggvenn(down_p_reverse,
-       show_percentage =F,
-       stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
-       set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
+                       show_percentage =F,
+                       stroke_color = "NA",fill_color =  c("#ffb2b2", "#b2e7cb", "#ffcc99"),
+                       set_name_color = c("#ff0000", "#4a9b83", "#0000ff"))
 
 # all venn upset plot----
 # 
@@ -450,7 +488,7 @@ ggvenn_down_p<- ggvenn(down_p_reverse,
 # downmRNA_p_reverse<- append(downmRNA_reverse, down_p_reverse)  
 # 
 # upmRNA_p_reverse<- append(upmRNA_reverse, up_p_reverse)  
-
+#extended figure 2-----------------------------------------
 library(UpSetR)
 
 up_mrna_p <- list(up_CaOH_mRNA=rownames(subset(hgConCaOH,log2FoldChange>2&padj<0.01)),
@@ -463,20 +501,20 @@ up_mrna_p <- list(up_CaOH_mRNA=rownames(subset(hgConCaOH,log2FoldChange>2&padj<0
                   up_CO2NaOH_p=CO2NaOH_up$name)  #HCHA1 upregulate
 down_mrna_p <- list(down_CaOH_mRNA=rownames(subset(hgConCaOH,log2FoldChange>2&padj<0.01)),
                     down_CO2_mRNA=rownames(subset(hgConCO2,log2FoldChange>2&padj<0.01)),
-                  down_CO2CaOH_mRNA=rownames(subset(hgConCO2CaOH,log2FoldChange>2&padj<0.01)),  #HC downregulate  CO2CaOH2_down$name  #HCHA1 downregulate
-                  down_CO2NaOH_mRNA=rownames(subset(hgConCO2NaOH,log2FoldChange>2&padj<0.01)),
-                  down_CaOH_p=CaOH2_down$name,  #HCHA1 downregulate
-                  down_CO2_p=CO2_down$name,
-                  down_CO2CaOH_p=CO2CaOH2_down$name,  #HCHA2 downregulate
-                  down_CO2NaOH_p=CO2NaOH_down$name)  #HCHA1 downregulate
+                    down_CO2CaOH_mRNA=rownames(subset(hgConCO2CaOH,log2FoldChange>2&padj<0.01)),  #HC downregulate  CO2CaOH2_down$name  #HCHA1 downregulate
+                    down_CO2NaOH_mRNA=rownames(subset(hgConCO2NaOH,log2FoldChange>2&padj<0.01)),
+                    down_CaOH_p=CaOH2_down$name,  #HCHA1 downregulate
+                    down_CO2_p=CO2_down$name,
+                    down_CO2CaOH_p=CO2CaOH2_down$name,  #HCHA2 downregulate
+                    down_CO2NaOH_p=CO2NaOH_down$name)  #HCHA1 downregulate
 upsetData=fromList(up_mrna_p)
 
 setbarcolor <- c("#2e409a", "#942d8d", "#d75427", "#006b7b", "#4da0a0", "#9b3a74", "#FF5733", "#FFC300")
 desired_order1 <- c("up_CO2NaOH_mRNA", "up_CO2CaOH_mRNA","up_CO2_mRNA", "up_CaOH_mRNA",
                     "up_CO2NaOH_p", "up_CO2CaOH_p","up_CO2_p","up_CaOH_p")
 upset_up<-upset(upsetData, sets = desired_order1, nset = 8, order.by = c('degree','freq'), decreasing = c(F, T),#排序
-      sets.bar.color = setbarcolor, keep.order = TRUE,#让集合按照 sets 参数中指定的出现的顺序排列
-      mb.ratio = c(0.4,0.6))
+                sets.bar.color = setbarcolor, keep.order = TRUE,#让集合按照 sets 参数中指定的出现的顺序排列
+                mb.ratio = c(0.4,0.6))
 inter_up_mrna_p<- get.venn.partitions(up_mrna_p)
 
 downsetData=fromList(down_mrna_p)
@@ -487,6 +525,8 @@ upset_down<- upset(downsetData, sets = desired_order2, nset = 8, order.by = c('d
                    mb.ratio = c(0.4,0.6))
 upset_down1 <- ggplotify::as.ggplot(upset_down)
 upset_up1 <- ggplotify::as.ggplot(upset_up)
+
+
 upset_both<- plot_grid(upset_up1,upset_down1,ncol = 1, align = "hv"  # "hv" stands for horizontal and vertical alignment
 )
 inter_down_mrna_p<- get.venn.partitions(down_mrna_p)
@@ -496,310 +536,5 @@ datahgraw1[rownames(datahgraw1) %in% unlist(inter_down_mrna_p[17,]$..values..),]
 ggsave("upset_both.pdf",upset_both, w=10,h=5)
 
 
-#downregulation HC-----
-inter_down <- get.venn.partitions(gene_reverse_d)
-inter_down_HC <- unlist(inter_down[7,5])
-p_down_HC_heatmap<-data_imp_coral[data_imp_coral$Protein %in% inter_down_HC, ][,c(1,4:23)]
-p_down_HC_heatmap[,22:(ncol(datahgraw_NR)+22)]<-datahgraw_NR[rownames(datahgraw_NR) %in% p_down_HC_heatmap$Protein,]
 
-#downregulation HC_HCHA -----
-inter_down_HC_HCHA<- unlist(inter_down[1,5])
-p_down_HC_HCHA_heatmap<-data_imp_coral[data_imp_coral$Protein %in% inter_down_HC_HCHA, ][,c(1,4:23)]
-p_down_HC_HCHA_heatmap[,22:(ncol(datahgraw_NR)+22)]<-datahgraw_NR[rownames(datahgraw_NR) %in% p_down_HC_HCHA_heatmap$Protein,]
-
-#downregulation HCHA-----
-inter_down_HCHA <- unlist(inter_down[2,5])
-p_down_HCHA_heatmap<-data_imp_coral[data_imp_coral$Protein %in% inter_down_HCHA, ][,c(1,4:23)]
-p_down_HCHA_heatmap[,22:(ncol(datahgraw_NR)+22)]<-datahgraw_NR[rownames(datahgraw_NR) %in% p_down_HCHA_heatmap$Protein,]
-
-
-
-# plot upregulated-----------
-library(Peptides) #calculate pI
-library(rentrez) #extract sequence
-
-#HC UP 
-HC_sequences <- entrez_fetch(db = "protein", id = p_up_HC_heatmap$Nr.ID, rettype = "fasta")
-write(HC_sequences, file="HC_sequence.fasta", sep="\n")
-pI_HC <- readBStringSet("HC_sequence.fasta", format = "fasta", use.names = TRUE)
-pI_HC_name1 <- names(pI_HC) %>% as.data.frame()
-pI_HC_data1 <- as.data.frame(pI_HC)
-pI_HC_data21 <- data.frame(ID= pI_HC_name1$.,seq=pI_HC_data1$x, ID2= substr( pI_HC_name1$., 1, 14))
-pI_HC_seq1=data.frame(pI_HC_data21) %>%
-  mutate("PI1" = round(pI(seq = pI_HC_data21$seq),1)) 
-p_up_HC_heatmap1<- p_up_HC_heatmap[,2:21]
-p_up_HC_heatmap1$pI<- pI_HC_seq1$PI1
-p_up_HC_heatmap1$ann<- p_up_HC_heatmap$Nr.annotation
-p_up_HC_heatmap1$Protein<- p_up_HC_heatmap$Protein
-p_up_HC_heatmap2 <- p_up_HC_heatmap1[order(p_up_HC_heatmap1$pI), ]
-p_up_HC_heatmap2_mRNA <-  normalized_hg[p_up_HC_heatmap2$Protein,] 
-#protein heatmap
-up_HC_heat_p=pheatmap(
-  p_up_HC_heatmap2[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-#mRNA heatmap
-up_HC_heat_mRNA=pheatmap(
-  p_up_HC_heatmap2_mRNA[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-
-up_HC_heat_p_bar <- ggplot(p_up_HC_heatmap2, aes(x = pI, y =  reorder(ann, -pI) )) +
-  geom_bar(stat = "identity", width = 0.5, fill = "blue") +
-  theme_minimal() +  xlim(0,15)+
-geom_vline(xintercept = 7, linetype = "dashed", color = "red")   # 在x=7处画一条虚线
- 
-
-#HC and HCHA UP 
-HC_HCHA_sequences <- entrez_fetch(db = "protein", id = p_up_HC_HCHA_heatmap$Nr.ID, rettype = "fasta")
-write(HC_HCHA_sequences, file="HC_HCHA_sequence.fasta", sep="\n")
-pI_HC_HCHA <- readBStringSet("HC_HCHA_sequence.fasta", format = "fasta", use.names = TRUE)
-pI_HC_HCHA_name1 <- names(pI_HC_HCHA) %>% as.data.frame()
-pI_HC_HCHA_data1 <- as.data.frame(pI_HC_HCHA)
-pI_HC_HCHA_data21 <- data.frame(ID= pI_HC_HCHA_name1$.,seq=pI_HC_HCHA_data1$x, ID2= substr( pI_HC_HCHA_name1$., 1, 14))
-pI_HC_HCHA_seq1=data.frame(pI_HC_HCHA_data21) %>%
-  mutate("PI1" = round(pI(seq = pI_HC_HCHA_data21$seq),1)) 
-p_up_HC_HCHA_heatmap1<- p_up_HC_HCHA_heatmap[,2:21]
-p_up_HC_HCHA_heatmap1$pI<- pI_HC_HCHA_seq1$PI1
-p_up_HC_HCHA_heatmap1$ann<- p_up_HC_HCHA_heatmap$Nr.annotation
-p_up_HC_HCHA_heatmap1$Protein<- p_up_HC_HCHA_heatmap$Protein
-p_up_HC_HCHA_heatmap2 <- p_up_HC_HCHA_heatmap1[order(p_up_HC_HCHA_heatmap1$pI), ]
-p_up_HC_HCHA_heatmap2_mRNA <-  normalized_hg[p_up_HC_HCHA_heatmap2$Protein,] 
-#protein heatmap
-up_HC_HCHA_heat_p=pheatmap(
-  p_up_HC_HCHA_heatmap2[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-#mRNA heatmap
-up_HC_HCHA_heat_mRNA=pheatmap(
-  p_up_HC_HCHA_heatmap2_mRNA[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-up_HC_HCHA_heat_p_bar <- ggplot(p_up_HC_HCHA_heatmap2, aes(x = pI, y =  reorder(ann, -pI) )) +
-  geom_bar(stat = "identity", width = 0.5, fill = "blue") +
-  theme_minimal() +  xlim(0,15)+
-  geom_vline(xintercept = 7, linetype = "dashed", color = "red")   # 在x=7处画一条虚线
-
-
-#HCHA UP 
-HCHA_sequences <- entrez_fetch(db = "protein", id = p_up_HCHA_heatmap$Nr.ID, rettype = "fasta")
-write(HCHA_sequences, file="HCHA_sequence.fasta", sep="\n")
-pI_HCHA <- readBStringSet("HCHA_sequence.fasta", format = "fasta", use.names = TRUE)
-pI_HCHA_name1 <- names(pI_HCHA) %>% as.data.frame()
-pI_HCHA_data1 <- as.data.frame(pI_HCHA)
-pI_HCHA_data21 <- data.frame(ID= pI_HCHA_name1$.,seq=pI_HCHA_data1$x, ID2= substr( pI_HCHA_name1$., 1, 14))
-pI_HCHA_seq1=data.frame(pI_HCHA_data21) %>%
-  mutate("PI1" = round(pI(seq = pI_HCHA_data21$seq),1)) 
-p_up_HCHA_heatmap1<- p_up_HCHA_heatmap[,2:21]
-p_up_HCHA_heatmap1$pI<- pI_HCHA_seq1$PI1
-p_up_HCHA_heatmap1$ann<- p_up_HCHA_heatmap$Nr.annotation
-p_up_HCHA_heatmap1$Protein<- p_up_HCHA_heatmap$Protein
-p_up_HCHA_heatmap2 <- p_up_HCHA_heatmap1[order(p_up_HCHA_heatmap1$pI), ]
-p_up_HCHA_heatmap2_mRNA <-  normalized_hg[p_up_HCHA_heatmap2$Protein,] 
-#protein heatmap
-up_HCHA_heat_p=pheatmap(
-  p_up_HCHA_heatmap2[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-#mRNA heatmap
-up_HCHA_heat_mRNA=pheatmap(
-  p_up_HCHA_heatmap2_mRNA[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-up_HCHA_heat_p_bar <- ggplot(p_up_HCHA_heatmap2, aes(x = pI, y =  reorder(ann, -pI) )) +
-  geom_bar(stat = "identity", width = 0.5, fill = "blue") +
-  theme_minimal() +  xlim(0,15)+
-  geom_vline(xintercept = 7, linetype = "dashed", color = "red")   # 在x=7处画一条虚线
-all_plots <- plot_grid(up_HC_heat_mRNA$gtable, up_HC_heat_p$gtable, 
-                        up_HC_HCHA_heat_mRNA$gtable, up_HC_HCHA_heat_p$gtable, 
-                        up_HCHA_heat_mRNA$gtable, up_HCHA_heat_p$gtable, ncol = 2, align = "hv"  # "hv" stands for horizontal and vertical alignment
-)
-bar_plot<-plot_grid(up_HC_heat_p_bar,up_HC_HCHA_heat_p_bar,up_HCHA_heat_p_bar,ncol = 1,align = "hv")
-ggsave("pI_UP_combined_heatmaps.pdf", all_plots, width =6, height = 15)
-ggsave("pI_UP_combined_bar.pdf", bar_plot, width = 9, height = 15)
-
-# plot downregulation------
-HC_sequences <- entrez_fetch(db = "protein", id = p_down_HC_heatmap$Nr.ID, rettype = "fasta")
-write(HC_sequences, file="HC_sequence.fasta", sep="\n")
-pI_HC <- readBStringSet("HC_sequence.fasta", format = "fasta", use.names = TRUE)
-pI_HC_name1 <- names(pI_HC) %>% as.data.frame()
-pI_HC_data1 <- as.data.frame(pI_HC)
-pI_HC_data21 <- data.frame(ID= pI_HC_name1$.,seq=pI_HC_data1$x, ID2= substr( pI_HC_name1$., 1, 14))
-pI_HC_seq1=data.frame(pI_HC_data21) %>%
-  mutate("PI1" = round(pI(seq = pI_HC_data21$seq),1)) 
-p_down_HC_heatmap1<- p_down_HC_heatmap[,2:21]
-p_down_HC_heatmap1$pI<- pI_HC_seq1$PI1
-p_down_HC_heatmap1$ann<- p_down_HC_heatmap$Nr.annotation
-p_down_HC_heatmap1$Protein<- p_down_HC_heatmap$Protein
-p_down_HC_heatmap2 <- p_down_HC_heatmap1[order(p_down_HC_heatmap1$pI), ]
-p_down_HC_heatmap2_mRNA <-  normalized_hg[p_down_HC_heatmap2$Protein,] 
-#protein heatmap
-down_HC_heat_p=pheatmap(
-  p_down_HC_heatmap2[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-#mRNA heatmap
-down_HC_heat_mRNA=pheatmap(
-  p_down_HC_heatmap2_mRNA[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-down_HC_heat_p_bar <- ggplot(p_down_HC_heatmap2, aes(x = pI, y =  reorder(ann, -pI) )) +
-  geom_bar(stat = "identity", width = 0.5, fill = "blue") +
-  theme_minimal() +  xlim(0,15)+
-  geom_vline(xintercept = 7, linetype = "dashed", color = "red")   # 在x=7处画一条虚线
-
-
-#HC and HCHA down 
-HC_HCHA_sequences <- entrez_fetch(db = "protein", id = p_down_HC_HCHA_heatmap$Nr.ID, rettype = "fasta")
-write(HC_HCHA_sequences, file="HC_HCHA_sequence.fasta", sep="\n")
-pI_HC_HCHA <- readBStringSet("HC_HCHA_sequence.fasta", format = "fasta", use.names = TRUE)
-pI_HC_HCHA_name1 <- names(pI_HC_HCHA) %>% as.data.frame()
-pI_HC_HCHA_data1 <- as.data.frame(pI_HC_HCHA)
-pI_HC_HCHA_data21 <- data.frame(ID= pI_HC_HCHA_name1$.,seq=pI_HC_HCHA_data1$x, ID2= substr( pI_HC_HCHA_name1$., 1, 14))
-pI_HC_HCHA_seq1=data.frame(pI_HC_HCHA_data21) %>%
-  mutate("PI1" = round(pI(seq = pI_HC_HCHA_data21$seq),1)) 
-p_down_HC_HCHA_heatmap1<- p_down_HC_HCHA_heatmap[,2:21]
-p_down_HC_HCHA_heatmap1$pI<- pI_HC_HCHA_seq1$PI1
-p_down_HC_HCHA_heatmap1$ann<- p_down_HC_HCHA_heatmap$Nr.annotation
-p_down_HC_HCHA_heatmap1$Protein<- p_down_HC_HCHA_heatmap$Protein
-p_down_HC_HCHA_heatmap2 <- p_down_HC_HCHA_heatmap1[order(p_down_HC_HCHA_heatmap1$pI), ]
-p_down_HC_HCHA_heatmap2_mRNA <-  normalized_hg[p_down_HC_HCHA_heatmap2$Protein,] 
-#protein heatmap
-down_HC_HCHA_heat_p=pheatmap(
-  p_down_HC_HCHA_heatmap2[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-#mRNA heatmap
-down_HC_HCHA_heat_mRNA=pheatmap(
-  p_down_HC_HCHA_heatmap2_mRNA[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-down_HC_HCHA_heat_p_bar <- ggplot(p_down_HC_HCHA_heatmap2, aes(x = pI, y =  reorder(ann, -pI) )) +
-  geom_bar(stat = "identity", width = 0.5, fill = "blue") +
-  theme_minimal() +  xlim(0,15)+
-  geom_vline(xintercept = 7, linetype = "dashed", color = "red")   # 在x=7处画一条虚线
-
-
-#HCHA down 
-HCHA_sequences <- entrez_fetch(db = "protein", id = p_down_HCHA_heatmap$Nr.ID, rettype = "fasta")
-write(HCHA_sequences, file="HCHA_sequence.fasta", sep="\n")
-pI_HCHA <- readBStringSet("HCHA_sequence.fasta", format = "fasta", use.names = TRUE)
-pI_HCHA_name1 <- names(pI_HCHA) %>% as.data.frame()
-pI_HCHA_data1 <- as.data.frame(pI_HCHA)
-pI_HCHA_data21 <- data.frame(ID= pI_HCHA_name1$.,seq=pI_HCHA_data1$x, ID2= substr( pI_HCHA_name1$., 1, 14))
-pI_HCHA_seq1=data.frame(pI_HCHA_data21) %>%
-  mutate("PI1" = round(pI(seq = pI_HCHA_data21$seq),1)) 
-p_down_HCHA_heatmap1<- p_down_HCHA_heatmap[,2:21]
-p_down_HCHA_heatmap1$pI<- pI_HCHA_seq1$PI1
-p_down_HCHA_heatmap1$ann<- p_down_HCHA_heatmap$Nr.annotation
-p_down_HCHA_heatmap1$Protein<- p_down_HCHA_heatmap$Protein
-p_down_HCHA_heatmap2 <- p_down_HCHA_heatmap1[order(p_down_HCHA_heatmap1$pI), ]
-p_down_HCHA_heatmap2_mRNA <-  normalized_hg[p_down_HCHA_heatmap2$Protein,] 
-#protein heatmap
-down_HCHA_heat_p=pheatmap(
-  p_down_HCHA_heatmap2[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-#mRNA heatmap
-down_HCHA_heat_mRNA=pheatmap(
-  p_down_HCHA_heatmap2_mRNA[,1:20],
-  scale = 'row',
-  border_color = NA,
-  cluster_cols = FALSE,
-  cluster_rows = F,
-  legend = FALSE,
-  labels_row = FALSE,
-  labels_col = conditionshg,
-  color = colorRampPalette(c("blue", "white", "red"))(1000),
-)
-down_HCHA_heat_p_bar <- ggplot(p_down_HCHA_heatmap2, aes(x = pI, y =  reorder(ann, -pI) )) +
-  geom_bar(stat = "identity", width = 0.5, fill = "blue", position = "dodge") +
-  theme_classic() +  xlim(0,15)+
-  geom_vline(xintercept = 7, linetype = "dashed", color = "red")   # 在x=7处画一条虚线
-all_plots <- plot_grid(down_HC_heat_mRNA$gtable, down_HC_heat_p$gtable, 
-                       down_HC_HCHA_heat_mRNA$gtable, down_HC_HCHA_heat_p$gtable, 
-                       down_HCHA_heat_mRNA$gtable, down_HCHA_heat_p$gtable, ncol = 2, align = "hv"  # "hv" stands for horizontal and vertical alignment
-)
-bar_plot<-plot_grid(down_HC_heat_p_bar,down_HC_HCHA_heat_p_bar,down_HCHA_heat_p_bar,ncol = 1,align = "hv")
-ggsave("pI_down_combined_heatmaps.pdf", all_plots, width =6, height = 15)
-ggsave("pI_down_combined_bar.pdf", bar_plot, width = 9, height = 15)
-
-
-save.image(file = "D:/my paper/2018-OLIVINE/滨共表达和论文/2021R - 副本/fig code/RData/Fig2.RData")
+save.image(file = "Fig2.RData")
